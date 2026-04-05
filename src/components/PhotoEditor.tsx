@@ -1,22 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
+import { type Lang, t } from '../i18n'
+import { type PhotoFormat } from '../photoFormats'
 
 const VIEWPORT_W = 420
 const VIEWPORT_H = 560
-const FRAME_W = 198   // 33mm × 6
-const FRAME_H = 288   // 48mm × 6
-const FRAME_X = (VIEWPORT_W - FRAME_W) / 2  // 111
-const FRAME_Y = (VIEWPORT_H - FRAME_H) / 2  // 136
-const OUTPUT_W = 390  // 33mm at 300dpi
-const OUTPUT_H = 567  // 48mm at 300dpi
+const MM_TO_PX_300DPI = 300 / 25.4  // 11.811
 
 interface Props {
   imageSrc: string
   onGenerate: (dataUrl: string) => void
   onBack: () => void
+  lang: Lang
+  format: PhotoFormat
 }
 
-export default function PhotoEditor({ imageSrc, onGenerate, onBack }: Props) {
+export default function PhotoEditor({ imageSrc, onGenerate, onBack, lang, format }: Props) {
   const imgRef = useRef<HTMLImageElement>(null)
   const [imgLoaded, setImgLoaded] = useState(false)
   const [imgPos, setImgPos] = useState({ x: VIEWPORT_W / 2, y: VIEWPORT_H / 2 })
@@ -24,6 +23,31 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack }: Props) {
   const [dragging, setDragging] = useState(false)
   const [showSilhouette, setShowSilhouette] = useState(true)
   const dragStart = useRef({ mx: 0, my: 0, px: 0, py: 0 })
+
+  // Dynamic frame dimensions derived from format
+  const { FRAME_W, FRAME_H, FRAME_X, FRAME_Y, OUTPUT_W, OUTPUT_H } = useMemo(() => {
+    const scalePxPerMm = Math.min(
+      (VIEWPORT_W * 0.7) / format.width,
+      (VIEWPORT_H * 0.7) / format.height
+    )
+    const fw = Math.round(format.width * scalePxPerMm)
+    const fh = Math.round(format.height * scalePxPerMm)
+    const fx = Math.round((VIEWPORT_W - fw) / 2)
+    const fy = Math.round((VIEWPORT_H - fh) / 2)
+    const ow = Math.round(format.width * MM_TO_PX_300DPI)
+    const oh = Math.round(format.height * MM_TO_PX_300DPI)
+    return { FRAME_W: fw, FRAME_H: fh, FRAME_X: fx, FRAME_Y: fy, OUTPUT_W: ow, OUTPUT_H: oh }
+  }, [format])
+
+  // Guide line fractions derived from format specs
+  const { crownFrac, chinFrac, headWidthInsetFrac, silhouetteCyFrac, silhouetteRyFrac } = useMemo(() => {
+    const crown = format.topMarginMax / format.height
+    const chin = (format.topMarginMax + format.headMax) / format.height
+    const inset = ((format.width - format.headMin) / 2) / format.width
+    const cy = (crown + chin) / 2
+    const ry = (chin - crown) / 2
+    return { crownFrac: crown, chinFrac: chin, headWidthInsetFrac: inset, silhouetteCyFrac: cy, silhouetteRyFrac: ry }
+  }, [format])
 
   function handleImgLoad() {
     const img = imgRef.current
@@ -39,6 +63,16 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack }: Props) {
   useEffect(() => {
     setImgLoaded(false)
   }, [imageSrc])
+
+  // Reset position/scale when format changes (FRAME_H changes)
+  useEffect(() => {
+    const img = imgRef.current
+    if (!img || !imgLoaded) return
+    const initialScale = (FRAME_H / img.naturalHeight) * 1.2
+    setImgScale(initialScale)
+    setImgPos({ x: VIEWPORT_W / 2, y: VIEWPORT_H / 2 })
+    setShowSilhouette(true)
+  }, [FRAME_H, imgLoaded])
 
   const clampScale = (s: number) => Math.min(5, Math.max(0.05, s))
 
@@ -159,8 +193,11 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack }: Props) {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8 gap-6">
       <div className="text-center">
-        <h2 className="text-xl font-semibold text-white">调整裁剪</h2>
-        <p className="text-sm text-gray-400 mt-1">拖动移位，滚轮或滑块缩放，对齐头部到框内</p>
+        <h2 className="text-xl font-semibold text-white">{t('adjustCrop', lang)}</h2>
+        <p className="text-sm text-gray-400 mt-1">{t('adjustHint', lang)}</p>
+        <p className="text-xs text-gray-500 mt-1">
+          {format.flag} {format.country[lang]} {format.label[lang]} · {format.width}×{format.height}mm
+        </p>
       </div>
 
       {/* Editor viewport */}
@@ -226,13 +263,12 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack }: Props) {
           }}
         />
 
-        {/* Guide lines — horizontal: crown 8.3% (4mm), chin 75% (36mm) */}
-        {/* crown: 4mm/48mm ≈ 8.3% from top; head height 36-4=32mm ✓; bottom 12mm ✓ */}
+        {/* Crown guide line */}
         <div
           style={{
             position: 'absolute',
             left: FRAME_X,
-            top: FRAME_Y + FRAME_H * 0.083,
+            top: FRAME_Y + FRAME_H * crownFrac,
             width: FRAME_W,
             height: 0,
             borderTop: '1px dashed rgba(255,220,80,0.6)',
@@ -240,11 +276,12 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack }: Props) {
             zIndex: 12,
           }}
         />
+        {/* Chin guide line */}
         <div
           style={{
             position: 'absolute',
             left: FRAME_X,
-            top: FRAME_Y + FRAME_H * 0.75,
+            top: FRAME_Y + FRAME_H * chinFrac,
             width: FRAME_W,
             height: 0,
             borderTop: '1px dashed rgba(255,220,80,0.6)',
@@ -253,11 +290,11 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack }: Props) {
           }}
         />
 
-        {/* Guide lines — vertical: head width min 15mm → 27.3% inset each side */}
+        {/* Head width guides — vertical */}
         <div
           style={{
             position: 'absolute',
-            left: FRAME_X + FRAME_W * 0.273,
+            left: FRAME_X + FRAME_W * headWidthInsetFrac,
             top: FRAME_Y,
             width: 0,
             height: FRAME_H,
@@ -269,7 +306,7 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack }: Props) {
         <div
           style={{
             position: 'absolute',
-            left: FRAME_X + FRAME_W * 0.727,
+            left: FRAME_X + FRAME_W * (1 - headWidthInsetFrac),
             top: FRAME_Y,
             width: 0,
             height: FRAME_H,
@@ -280,14 +317,14 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack }: Props) {
         />
 
         {/* Guide labels */}
-        <div style={{ position: 'absolute', left: FRAME_X + FRAME_W + 6, top: FRAME_Y + FRAME_H * 0.083 - 8, fontSize: 10, color: 'rgba(255,220,80,0.75)', pointerEvents: 'none', zIndex: 12, whiteSpace: 'nowrap' }}>
-          发顶
+        <div style={{ position: 'absolute', left: FRAME_X + FRAME_W + 6, top: FRAME_Y + FRAME_H * crownFrac - 8, fontSize: 10, color: 'rgba(255,220,80,0.75)', pointerEvents: 'none', zIndex: 12, whiteSpace: 'nowrap' }}>
+          {t('crownLine', lang)}
         </div>
-        <div style={{ position: 'absolute', left: FRAME_X + FRAME_W + 6, top: FRAME_Y + FRAME_H * 0.75 - 8, fontSize: 10, color: 'rgba(255,220,80,0.75)', pointerEvents: 'none', zIndex: 12, whiteSpace: 'nowrap' }}>
-          下颌
+        <div style={{ position: 'absolute', left: FRAME_X + FRAME_W + 6, top: FRAME_Y + FRAME_H * chinFrac - 8, fontSize: 10, color: 'rgba(255,220,80,0.75)', pointerEvents: 'none', zIndex: 12, whiteSpace: 'nowrap' }}>
+          {t('chinLine', lang)}
         </div>
-        <div style={{ position: 'absolute', left: FRAME_X + FRAME_W * 0.273 + 2, top: FRAME_Y + 4, fontSize: 9, color: 'rgba(100,180,255,0.65)', pointerEvents: 'none', zIndex: 12, whiteSpace: 'nowrap' }}>
-          头宽≥15mm
+        <div style={{ position: 'absolute', left: FRAME_X + FRAME_W * headWidthInsetFrac + 2, top: FRAME_Y + 4, fontSize: 9, color: 'rgba(100,180,255,0.65)', pointerEvents: 'none', zIndex: 12, whiteSpace: 'nowrap' }}>
+          {t('headWidth', lang)}{format.headMin}mm
         </div>
 
         {/* Head silhouette overlay */}
@@ -304,12 +341,11 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack }: Props) {
             }}
             viewBox={`0 0 ${FRAME_W} ${FRAME_H}`}
           >
-            {/* Head oval: spans crown (8.3%) to chin (75%), center at 41.7%, ry=33.3% */}
             <ellipse
               cx={FRAME_W / 2}
-              cy={FRAME_H * 0.417}
+              cy={FRAME_H * silhouetteCyFrac}
               rx={FRAME_W * 0.30}
-              ry={FRAME_H * 0.333}
+              ry={FRAME_H * silhouetteRyFrac}
               fill="rgba(255,255,255,0.08)"
               stroke="rgba(255,255,255,0.25)"
               strokeWidth="1.5"
@@ -317,7 +353,7 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack }: Props) {
             />
             {/* Neck + shoulders hint */}
             <path
-              d={`M ${FRAME_W * 0.35} ${FRAME_H * 0.67} Q ${FRAME_W * 0.5} ${FRAME_H * 0.72} ${FRAME_W * 0.65} ${FRAME_H * 0.67}`}
+              d={`M ${FRAME_W * 0.35} ${FRAME_H * chinFrac * 0.93} Q ${FRAME_W * 0.5} ${FRAME_H * chinFrac} ${FRAME_W * 0.65} ${FRAME_H * chinFrac * 0.93}`}
               fill="none"
               stroke="rgba(255,255,255,0.18)"
               strokeWidth="1.5"
@@ -329,12 +365,10 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack }: Props) {
 
       {/* Zoom slider */}
       <div className="flex flex-col items-center gap-2 w-full max-w-xs">
-        {/* Slider row */}
         <div className="flex items-center gap-3 w-full">
           <button
             onClick={() => setImgScale(s => clampScale(s - 0.05))}
             className="p-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors"
-            title="缩小 5%"
           >
             <ZoomOut className="w-4 h-4" />
           </button>
@@ -353,14 +387,12 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack }: Props) {
           <button
             onClick={() => setImgScale(s => clampScale(s + 0.05))}
             className="p-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors"
-            title="放大 5%"
           >
             <ZoomIn className="w-4 h-4" />
           </button>
         </div>
-        {/* Fine-tune row */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 w-16 text-right">微调</span>
+          <span className="text-xs text-gray-500 w-16 text-right">{t('fineTune', lang)}</span>
           <button
             onClick={() => setImgScale(s => clampScale(parseFloat((s - 0.01).toFixed(3))))}
             className="px-2.5 py-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-mono transition-colors"
@@ -381,12 +413,11 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack }: Props) {
           onClick={onBack}
           className="px-5 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium transition-colors"
         >
-          重新上传
+          {t('reupload', lang)}
         </button>
         <button
           onClick={handleReset}
           className="px-3 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors"
-          title="重置位置"
         >
           <RotateCcw className="w-4 h-4" />
         </button>
@@ -394,7 +425,7 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack }: Props) {
           onClick={generate}
           className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors"
         >
-          生成证件照
+          {t('generate', lang)}
         </button>
       </div>
     </div>

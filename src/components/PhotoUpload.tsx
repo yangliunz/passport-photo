@@ -1,11 +1,16 @@
 import { useRef, useState } from 'react'
 import { Upload } from 'lucide-react'
+import { type Lang, t } from '../i18n'
+import { type PhotoFormat, FORMATS } from '../photoFormats'
 
 interface Props {
   onUpload: (objectUrl: string) => void
+  lang: Lang
+  format: PhotoFormat
+  onFormatChange: (f: PhotoFormat) => void
 }
 
-export default function PhotoUpload({ onUpload }: Props) {
+export default function PhotoUpload({ onUpload, lang, format, onFormatChange }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const [error, setError] = useState<string>('')
@@ -15,14 +20,14 @@ export default function PhotoUpload({ onUpload }: Props) {
     const isImage = file.type.startsWith('image/') ||
       /\.(jpe?g|png|webp|gif|bmp|heic|avif)$/i.test(file.name)
     if (!isImage) {
-      setError('不支持的文件格式，请上传 JPG、PNG 或 WEBP')
+      setError(t('uploadError', lang))
       return
     }
     try {
       const url = URL.createObjectURL(file)
       onUpload(url)
     } catch {
-      setError('文件读取失败，请重试')
+      setError(t('uploadError', lang))
     }
   }
 
@@ -41,9 +46,30 @@ export default function PhotoUpload({ onUpload }: Props) {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4">
       <div className="w-full max-w-md">
-        <h1 className="text-2xl font-semibold text-white text-center mb-2">证件照生成器</h1>
-        <p className="text-sm text-gray-400 text-center mb-8">中国护照标准 · 33×48mm · 300dpi</p>
+        <h1 className="text-2xl font-semibold text-white text-center mb-6">
+          {t('appTitle', lang)}
+        </h1>
 
+        {/* Format selector */}
+        <div className="mb-5">
+          <label className="block text-xs text-gray-400 mb-2">{t('selectFormat', lang)}</label>
+          <select
+            value={format.id}
+            onChange={(e) => {
+              const found = FORMATS.find(f => f.id === e.target.value)
+              if (found) onFormatChange(found)
+            }}
+            className="w-full bg-gray-800 border border-gray-600 text-white text-sm rounded-xl px-3 py-2.5 appearance-none cursor-pointer focus:outline-none focus:border-blue-500"
+          >
+            {FORMATS.map(f => (
+              <option key={f.id} value={f.id}>
+                {f.flag} {f.country[lang]} — {f.label[lang]} ({f.width}×{f.height}mm)
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Upload area */}
         <div
           className={`
             border-2 border-dashed rounded-2xl p-12
@@ -63,9 +89,9 @@ export default function PhotoUpload({ onUpload }: Props) {
             <Upload className="w-7 h-7 text-gray-300" />
           </div>
           <div className="text-center">
-            <p className="text-white font-medium">上传照片</p>
-            <p className="text-gray-500 text-sm mt-1">点击或拖拽图片到此处</p>
-            <p className="text-gray-600 text-xs mt-1">支持 JPG、PNG、WEBP、HEIC</p>
+            <p className="text-white font-medium">{t('upload', lang)}</p>
+            <p className="text-gray-500 text-sm mt-1">{t('uploadHint', lang)}</p>
+            <p className="text-gray-600 text-xs mt-1">{t('uploadFormats', lang)}</p>
           </div>
         </div>
 
