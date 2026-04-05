@@ -94,15 +94,26 @@ export default function PrintPreview({ photoCrop, onBack, lang, format }: Props)
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8 gap-6">
+
+      {/* Heading */}
       <div className="text-center">
-        <h2 className="text-xl font-semibold text-white">{t('downloadLayout', lang)}</h2>
-        <p className="text-sm text-gray-400 mt-1">
+        <h2 style={{ color: '#F1F5F9', fontSize: 18, fontWeight: 600, margin: 0 }}>
+          {t('downloadLayout', lang)}
+        </h2>
+        <p style={{ color: '#475569', fontSize: 13, marginTop: 4 }}>
           {t('photos4x6', lang)} · {photoCount} {lang === 'zh' ? '张' : 'photos'}
         </p>
       </div>
 
-      {/* Print layout preview */}
-      <div className="rounded-xl overflow-hidden border border-gray-700 shadow-2xl">
+      {/* Print layout preview — paper shadow */}
+      <div
+        style={{
+          borderRadius: 10,
+          overflow: 'hidden',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 25px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)',
+        }}
+      >
         <canvas
           ref={previewRef}
           width={previewW}
@@ -111,45 +122,142 @@ export default function PrintPreview({ photoCrop, onBack, lang, format }: Props)
         />
       </div>
 
-      <p className="text-xs text-gray-500 text-center max-w-xs">
+      <p style={{ fontSize: 11, color: '#334155', textAlign: 'center', maxWidth: 280 }}>
         {t('printHint', lang)}
       </p>
 
-      {/* Single photo preview */}
-      <div className="flex items-center gap-4">
+      {/* Single photo preview — physical photo look */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         <div>
-          <p className="text-xs text-gray-500 mb-2 text-center">{t('singlePreview', lang)}</p>
-          <img
-            src={photoCrop}
-            alt=""
-            className="rounded border border-gray-600"
-            style={{ width: previewSingleW, height: previewSingleH }}
-          />
+          <p style={{ fontSize: 11, color: '#475569', marginBottom: 8, textAlign: 'center' }}>
+            {t('singlePreview', lang)}
+          </p>
+          <div
+            style={{
+              display: 'inline-block',
+              background: '#fff',
+              padding: '5px 5px 14px 5px',
+              borderRadius: 3,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)',
+            }}
+          >
+            <img
+              src={photoCrop}
+              alt=""
+              style={{ display: 'block', width: previewSingleW, height: previewSingleH }}
+            />
+          </div>
+        </div>
+
+        {/* Ready badge */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+            padding: '6px 12px',
+            borderRadius: 20,
+            background: 'rgba(34,197,94,0.1)',
+            border: '1px solid rgba(34,197,94,0.2)',
+            fontSize: 12,
+            color: '#4ADE80',
+            fontWeight: 500,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M2 5l2.5 2.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          {lang === 'zh' ? '可以打印' : 'Ready to print'}
         </div>
       </div>
 
       {/* Actions */}
-      <div className="flex flex-wrap justify-center gap-3">
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 10, width: '100%', maxWidth: 400 }}>
+        {/* Back */}
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium transition-colors"
+          style={{
+            minHeight: 44,
+            padding: '0 18px',
+            borderRadius: 12,
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            color: '#94A3B8',
+            fontSize: 14,
+            fontWeight: 500,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            transition: 'all 0.18s ease',
+          }}
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft style={{ width: 15, height: 15 }} />
           {t('readjust', lang)}
         </button>
+
+        {/* Download single — outlined secondary */}
         <button
           onClick={handleDownloadSingle}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium transition-colors"
+          style={{
+            minHeight: 44,
+            padding: '0 18px',
+            borderRadius: 12,
+            background: 'transparent',
+            border: '1px solid rgba(255,255,255,0.14)',
+            color: '#CBD5E1',
+            fontSize: 14,
+            fontWeight: 500,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            transition: 'all 0.18s ease',
+          }}
         >
-          <Download className="w-4 h-4" />
-          {t('downloadSingle', lang)} <span className="text-gray-400 text-xs">{format.width}×{format.height}mm</span>
+          <Download style={{ width: 15, height: 15 }} />
+          {t('downloadSingle', lang)}
+          <span style={{ color: '#64748B', fontSize: 11 }}>{format.width}×{format.height}mm</span>
         </button>
+
+        {/* Download layout — primary */}
         <button
           onClick={handleDownloadLayout}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors"
+          style={{
+            minHeight: 44,
+            padding: '0 22px',
+            borderRadius: 12,
+            background: '#3B82F6',
+            border: 'none',
+            color: '#fff',
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 7,
+            boxShadow: '0 0 20px rgba(59,130,246,0.4)',
+            transition: 'all 0.18s ease',
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.02)'
+            ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 28px rgba(59,130,246,0.6)'
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'
+            ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 20px rgba(59,130,246,0.4)'
+          }}
+          onMouseDown={e => {
+            (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.98)'
+          }}
+          onMouseUp={e => {
+            (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.02)'
+          }}
         >
-          <Download className="w-4 h-4" />
-          {t('downloadLayout', lang)} <span className="text-blue-300 text-xs">4×6{lang === 'zh' ? '英寸' : 'in'}</span>
+          <Download style={{ width: 15, height: 15, filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.5))' }} />
+          {t('downloadLayout', lang)}
+          <span style={{ color: '#93C5FD', fontSize: 11 }}>4×6{lang === 'zh' ? '英寸' : 'in'}</span>
         </button>
       </div>
     </div>

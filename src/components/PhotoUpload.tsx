@@ -46,57 +46,171 @@ export default function PhotoUpload({ onUpload, lang, format, onFormatChange }: 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4">
       <div className="w-full max-w-md">
-        <h1 className="text-2xl font-semibold text-white text-center mb-6">
-          {t('appTitle', lang)}
-        </h1>
 
-        {/* Format selector */}
-        <div className="mb-5">
-          <label className="block text-xs text-gray-400 mb-2">{t('selectFormat', lang)}</label>
-          <select
-            value={format.id}
-            onChange={(e) => {
-              const found = FORMATS.find(f => f.id === e.target.value)
-              if (found) onFormatChange(found)
+        {/* Title */}
+        <div className="text-center mb-8">
+          <h1
+            className="text-3xl font-bold mb-2"
+            style={{
+              background: 'linear-gradient(135deg, #F1F5F9 0%, #94A3B8 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
             }}
-            className="w-full bg-gray-800 border border-gray-600 text-white text-sm rounded-xl px-3 py-2.5 appearance-none cursor-pointer focus:outline-none focus:border-blue-500"
           >
-            {FORMATS.map(f => (
-              <option key={f.id} value={f.id}>
-                {f.flag} {f.country[lang]} — {f.label[lang]} ({f.width}×{f.height}mm)
-              </option>
-            ))}
-          </select>
+            {t('appTitle', lang)}
+          </h1>
+          <p style={{ color: '#475569', fontSize: 13 }}>
+            {lang === 'zh' ? '专业证件照，随时随地，一键生成' : 'Professional ID photos, anywhere, in seconds'}
+          </p>
+        </div>
+
+        {/* Format selector — horizontal scrollable card row */}
+        <div className="mb-6">
+          <label style={{ display: 'block', fontSize: 11, color: '#475569', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 500 }}>
+            {t('selectFormat', lang)}
+          </label>
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              overflowX: 'auto',
+              paddingBottom: 4,
+              scrollbarWidth: 'none',
+            }}
+          >
+            {FORMATS.map(f => {
+              const selected = f.id === format.id
+              return (
+                <button
+                  key={f.id}
+                  onClick={() => onFormatChange(f)}
+                  style={{
+                    flexShrink: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 4,
+                    padding: '8px 10px',
+                    borderRadius: 12,
+                    border: selected
+                      ? '1.5px solid #3B82F6'
+                      : '1.5px solid rgba(255,255,255,0.07)',
+                    background: selected
+                      ? 'rgba(59,130,246,0.12)'
+                      : 'rgba(255,255,255,0.03)',
+                    cursor: 'pointer',
+                    transition: 'all 0.18s ease',
+                    boxShadow: selected ? '0 0 14px rgba(59,130,246,0.25)' : 'none',
+                    minWidth: 64,
+                  }}
+                >
+                  <span style={{ fontSize: 20, lineHeight: 1 }}>{f.flag}</span>
+                  <span style={{ fontSize: 10, color: selected ? '#93C5FD' : '#64748B', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                    {f.country[lang]}
+                  </span>
+                  <span style={{ fontSize: 9, color: selected ? '#60A5FA' : '#475569', whiteSpace: 'nowrap' }}>
+                    {f.width}×{f.height}mm
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {/* Upload area */}
         <div
-          className={`
-            border-2 border-dashed rounded-2xl p-12
-            flex flex-col items-center justify-center gap-4
-            cursor-pointer transition-colors duration-200
-            ${dragging
-              ? 'border-blue-400 bg-blue-950/30'
-              : 'border-gray-600 hover:border-gray-400 bg-gray-900/40'
-            }
-          `}
+          className={`upload-zone-hover`}
           onClick={() => inputRef.current?.click()}
           onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
           onDragLeave={() => setDragging(false)}
           onDrop={handleDrop}
+          style={{
+            border: dragging
+              ? '2px dashed #3B82F6'
+              : '2px dashed rgba(255,255,255,0.1)',
+            borderRadius: 20,
+            padding: '40px 24px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 16,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            background: dragging
+              ? 'rgba(59,130,246,0.08)'
+              : 'rgba(255,255,255,0.02)',
+            boxShadow: dragging ? '0 0 30px rgba(59,130,246,0.15)' : 'none',
+          }}
         >
-          <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center">
-            <Upload className="w-7 h-7 text-gray-300" />
+          {/* Icon */}
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(59,130,246,0.1)',
+              border: '1px solid rgba(59,130,246,0.2)',
+              boxShadow: '0 0 20px rgba(59,130,246,0.12)',
+            }}
+          >
+            <Upload style={{ width: 26, height: 26, color: '#60A5FA' }} />
           </div>
-          <div className="text-center">
-            <p className="text-white font-medium">{t('upload', lang)}</p>
-            <p className="text-gray-500 text-sm mt-1">{t('uploadHint', lang)}</p>
-            <p className="text-gray-600 text-xs mt-1">{t('uploadFormats', lang)}</p>
+
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ color: '#F1F5F9', fontWeight: 600, fontSize: 15, marginBottom: 4 }}>
+              {t('upload', lang)}
+            </p>
+            <p style={{ color: '#475569', fontSize: 13, marginBottom: 2 }}>
+              {t('uploadHint', lang)}
+            </p>
+            <p style={{ color: '#334155', fontSize: 11 }}>
+              {t('uploadFormats', lang)}
+            </p>
           </div>
+
+          {/* CTA button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}
+            style={{
+              minHeight: 44,
+              width: '100%',
+              maxWidth: 240,
+              borderRadius: 12,
+              background: '#3B82F6',
+              color: '#fff',
+              fontWeight: 600,
+              fontSize: 14,
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 0 20px rgba(59,130,246,0.35)',
+              transition: 'all 0.18s ease',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.02)'
+              ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 28px rgba(59,130,246,0.5)'
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'
+              ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 20px rgba(59,130,246,0.35)'
+            }}
+            onMouseDown={e => {
+              (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.98)'
+            }}
+            onMouseUp={e => {
+              (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.02)'
+            }}
+          >
+            {lang === 'zh' ? '选择照片' : 'Choose Photo'}
+          </button>
         </div>
 
         {error && (
-          <p className="mt-3 text-sm text-red-400 text-center">{error}</p>
+          <p style={{ marginTop: 12, fontSize: 13, color: '#F87171', textAlign: 'center' }}>{error}</p>
         )}
 
         <input

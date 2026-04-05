@@ -190,20 +190,113 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack, lang, format
     onGenerate(canvas.toDataURL('image/png'))
   }
 
+  const ghostBtnStyle: React.CSSProperties = {
+    minHeight: 44,
+    padding: '0 18px',
+    borderRadius: 12,
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    color: '#94A3B8',
+    fontSize: 14,
+    fontWeight: 500,
+    cursor: 'pointer',
+    transition: 'all 0.18s ease',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+  }
+
+  const iconBtnStyle: React.CSSProperties = {
+    minHeight: 44,
+    minWidth: 44,
+    borderRadius: 12,
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    color: '#64748B',
+    cursor: 'pointer',
+    transition: 'all 0.18s ease',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
+
+  const primaryBtnStyle: React.CSSProperties = {
+    minHeight: 44,
+    padding: '0 28px',
+    borderRadius: 12,
+    background: '#3B82F6',
+    border: 'none',
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    boxShadow: '0 0 20px rgba(59,130,246,0.35)',
+    transition: 'all 0.18s ease',
+  }
+
+  const zoomBtnStyle: React.CSSProperties = {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    background: 'rgba(255,255,255,0.05)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    color: '#64748B',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.15s ease',
+    flexShrink: 0,
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8 gap-6">
+    <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8 gap-5">
+
+      {/* Format badge + heading */}
       <div className="text-center">
-        <h2 className="text-xl font-semibold text-white">{t('adjustCrop', lang)}</h2>
-        <p className="text-sm text-gray-400 mt-1">{t('adjustHint', lang)}</p>
-        <p className="text-xs text-gray-500 mt-1">
-          {format.flag} {format.country[lang]} {format.label[lang]} · {format.width}×{format.height}mm
+        {/* Format chip */}
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+            padding: '3px 10px',
+            borderRadius: 20,
+            background: 'rgba(59,130,246,0.1)',
+            border: '1px solid rgba(59,130,246,0.2)',
+            fontSize: 11,
+            color: '#60A5FA',
+            marginBottom: 8,
+          }}
+        >
+          <span>{format.flag}</span>
+          <span>{format.country[lang]}</span>
+          <span style={{ color: '#3B82F6' }}>·</span>
+          <span>{format.label[lang]}</span>
+          <span style={{ color: '#3B82F6' }}>·</span>
+          <span>{format.width}×{format.height}mm</span>
+        </div>
+        <h2 style={{ color: '#F1F5F9', fontSize: 18, fontWeight: 600, margin: 0 }}>
+          {t('adjustCrop', lang)}
+        </h2>
+        <p style={{ color: '#475569', fontSize: 13, marginTop: 4 }}>
+          {t('adjustHint', lang)}
         </p>
       </div>
 
       {/* Editor viewport */}
       <div
-        className="relative rounded-xl overflow-hidden bg-gray-900 select-none"
-        style={{ width: VIEWPORT_W, height: VIEWPORT_H, cursor: dragging ? 'grabbing' : 'grab' }}
+        style={{
+          position: 'relative',
+          borderRadius: 16,
+          overflow: 'hidden',
+          background: '#0D1117',
+          userSelect: 'none',
+          cursor: dragging ? 'grabbing' : 'grab',
+          width: VIEWPORT_W,
+          height: VIEWPORT_H,
+          boxShadow: '0 0 0 1px rgba(255,255,255,0.08), 0 20px 60px rgba(0,0,0,0.6)',
+        }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -271,7 +364,7 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack, lang, format
             top: FRAME_Y + FRAME_H * crownFrac,
             width: FRAME_W,
             height: 0,
-            borderTop: '1px dashed rgba(255,220,80,0.6)',
+            borderTop: '1px dashed rgba(251,191,36,0.6)',
             pointerEvents: 'none',
             zIndex: 12,
           }}
@@ -284,7 +377,7 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack, lang, format
             top: FRAME_Y + FRAME_H * chinFrac,
             width: FRAME_W,
             height: 0,
-            borderTop: '1px dashed rgba(255,220,80,0.6)',
+            borderTop: '1px dashed rgba(251,191,36,0.6)',
             pointerEvents: 'none',
             zIndex: 12,
           }}
@@ -298,7 +391,7 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack, lang, format
             top: FRAME_Y,
             width: 0,
             height: FRAME_H,
-            borderLeft: '1px dashed rgba(100,180,255,0.45)',
+            borderLeft: '1px dashed rgba(96,165,250,0.45)',
             pointerEvents: 'none',
             zIndex: 12,
           }}
@@ -310,20 +403,20 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack, lang, format
             top: FRAME_Y,
             width: 0,
             height: FRAME_H,
-            borderLeft: '1px dashed rgba(100,180,255,0.45)',
+            borderLeft: '1px dashed rgba(96,165,250,0.45)',
             pointerEvents: 'none',
             zIndex: 12,
           }}
         />
 
         {/* Guide labels */}
-        <div style={{ position: 'absolute', left: FRAME_X + FRAME_W + 6, top: FRAME_Y + FRAME_H * crownFrac - 8, fontSize: 10, color: 'rgba(255,220,80,0.75)', pointerEvents: 'none', zIndex: 12, whiteSpace: 'nowrap' }}>
+        <div style={{ position: 'absolute', left: FRAME_X + FRAME_W + 6, top: FRAME_Y + FRAME_H * crownFrac - 8, fontSize: 10, color: 'rgba(251,191,36,0.8)', pointerEvents: 'none', zIndex: 12, whiteSpace: 'nowrap' }}>
           {t('crownLine', lang)}
         </div>
-        <div style={{ position: 'absolute', left: FRAME_X + FRAME_W + 6, top: FRAME_Y + FRAME_H * chinFrac - 8, fontSize: 10, color: 'rgba(255,220,80,0.75)', pointerEvents: 'none', zIndex: 12, whiteSpace: 'nowrap' }}>
+        <div style={{ position: 'absolute', left: FRAME_X + FRAME_W + 6, top: FRAME_Y + FRAME_H * chinFrac - 8, fontSize: 10, color: 'rgba(251,191,36,0.8)', pointerEvents: 'none', zIndex: 12, whiteSpace: 'nowrap' }}>
           {t('chinLine', lang)}
         </div>
-        <div style={{ position: 'absolute', left: FRAME_X + FRAME_W * headWidthInsetFrac + 2, top: FRAME_Y + 4, fontSize: 9, color: 'rgba(100,180,255,0.65)', pointerEvents: 'none', zIndex: 12, whiteSpace: 'nowrap' }}>
+        <div style={{ position: 'absolute', left: FRAME_X + FRAME_W * headWidthInsetFrac + 2, top: FRAME_Y + 4, fontSize: 9, color: 'rgba(96,165,250,0.7)', pointerEvents: 'none', zIndex: 12, whiteSpace: 'nowrap' }}>
           {t('headWidth', lang)}{format.headMin}mm
         </div>
 
@@ -346,8 +439,8 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack, lang, format
               cy={FRAME_H * silhouetteCyFrac}
               rx={FRAME_W * 0.30}
               ry={FRAME_H * silhouetteRyFrac}
-              fill="rgba(255,255,255,0.08)"
-              stroke="rgba(255,255,255,0.25)"
+              fill="rgba(255,255,255,0.06)"
+              stroke="rgba(255,255,255,0.22)"
               strokeWidth="1.5"
               strokeDasharray="4 3"
             />
@@ -355,7 +448,7 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack, lang, format
             <path
               d={`M ${FRAME_W * 0.35} ${FRAME_H * chinFrac * 0.93} Q ${FRAME_W * 0.5} ${FRAME_H * chinFrac} ${FRAME_W * 0.65} ${FRAME_H * chinFrac * 0.93}`}
               fill="none"
-              stroke="rgba(255,255,255,0.18)"
+              stroke="rgba(255,255,255,0.15)"
               strokeWidth="1.5"
               strokeDasharray="4 3"
             />
@@ -364,13 +457,14 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack, lang, format
       </div>
 
       {/* Zoom slider */}
-      <div className="flex flex-col items-center gap-2 w-full max-w-xs">
-        <div className="flex items-center gap-3 w-full">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, width: '100%', maxWidth: 340 }}>
+        {/* Slider row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}>
           <button
             onClick={() => setImgScale(s => clampScale(s - 0.05))}
-            className="p-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors"
+            style={zoomBtnStyle}
           >
-            <ZoomOut className="w-4 h-4" />
+            <ZoomOut style={{ width: 15, height: 15 }} />
           </button>
           <input
             type="range"
@@ -382,48 +476,82 @@ export default function PhotoEditor({ imageSrc, onGenerate, onBack, lang, format
               setShowSilhouette(false)
               setImgScale(parseFloat(e.target.value) / 100)
             }}
-            className="flex-1 accent-blue-500"
+            style={{ flex: 1, accentColor: '#3B82F6' }}
           />
           <button
             onClick={() => setImgScale(s => clampScale(s + 0.05))}
-            className="p-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors"
+            style={zoomBtnStyle}
           >
-            <ZoomIn className="w-4 h-4" />
+            <ZoomIn style={{ width: 15, height: 15 }} />
           </button>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 w-16 text-right">{t('fineTune', lang)}</span>
+
+        {/* Fine-tune row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 11, color: '#475569', width: 28, textAlign: 'right' }}>
+            {t('fineTune', lang)}
+          </span>
           <button
             onClick={() => setImgScale(s => clampScale(parseFloat((s - 0.01).toFixed(3))))}
-            className="px-2.5 py-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-mono transition-colors"
+            style={{
+              padding: '5px 12px',
+              borderRadius: 20,
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: '#94A3B8',
+              fontSize: 12,
+              fontFamily: 'monospace',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
           >－1%</button>
-          <span className="text-xs text-gray-400 w-12 text-center font-mono">
+          <span style={{ fontSize: 12, color: '#64748B', width: 44, textAlign: 'center', fontFamily: 'monospace' }}>
             {Math.round(imgScale * 100)}%
           </span>
           <button
             onClick={() => setImgScale(s => clampScale(parseFloat((s + 0.01).toFixed(3))))}
-            className="px-2.5 py-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-mono transition-colors"
+            style={{
+              padding: '5px 12px',
+              borderRadius: 20,
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: '#94A3B8',
+              fontSize: 12,
+              fontFamily: 'monospace',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
           >＋1%</button>
         </div>
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3">
-        <button
-          onClick={onBack}
-          className="px-5 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium transition-colors"
-        >
+      <div
+        style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 340 }}
+      >
+        <button style={ghostBtnStyle} onClick={onBack}>
           {t('reupload', lang)}
         </button>
-        <button
-          onClick={handleReset}
-          className="px-3 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors"
-        >
-          <RotateCcw className="w-4 h-4" />
+        <button style={iconBtnStyle} onClick={handleReset} title={t('reset', lang)}>
+          <RotateCcw style={{ width: 15, height: 15 }} />
         </button>
         <button
+          style={{ ...primaryBtnStyle, flex: 1 }}
           onClick={generate}
-          className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors"
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.02)'
+            ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 28px rgba(59,130,246,0.55)'
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'
+            ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 20px rgba(59,130,246,0.35)'
+          }}
+          onMouseDown={e => {
+            (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.98)'
+          }}
+          onMouseUp={e => {
+            (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.02)'
+          }}
         >
           {t('generate', lang)}
         </button>
