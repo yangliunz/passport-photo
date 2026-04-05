@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "deploy": "git push origin main && gh workflow run deploy.yml --repo yangliunz/passport-photo"
+    "publish-pages": "git push origin main && gh workflow run deploy.yml --repo yangliunz/passport-photo"
   },
   "dependencies": {
     "react": "^18.3.1",
